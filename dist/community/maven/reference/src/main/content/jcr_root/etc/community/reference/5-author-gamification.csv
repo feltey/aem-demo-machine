@@ -1,0 +1,6 @@
+# Title: Install Community Gamification Rules,,,,,
+"# Description: This option configures the gamification rules for this demo site, only after all UGC is first created",,,,,
+# Assigning the scoring and badging rules to the site,,,,,
+SlingPost,/content/sites/communities/jcr:content,scoringRules@String[],/etc/community/scoring/rules/forums-scoring,badgingRules@String[],/etc/community/badging/rules/forums-badging
+# Republishing the site,,,,,
+SitePublish,/content/sites/communities/en,,,,

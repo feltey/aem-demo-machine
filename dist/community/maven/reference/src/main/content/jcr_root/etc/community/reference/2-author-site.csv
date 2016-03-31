@@ -27,8 +27,6 @@ SlingPost,/content/sites/communities/en/trending/jcr:content/content/primary/tre
 SlingPost,/content/sites/communities/en/trending/jcr:content/content/primary/trending4/cq:responsive/default,width,6,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Assigning a few role based badges,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Badge,/home/users/geometrixx-outdoors/aaron.mcdonald%40mailinator.com/profile.social.json,badgeContentPath,/etc/community/badging/images/moderator/jcr:content/moderator.png,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-# Assigning the scoring and badging rules to the site,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-SlingPost,/content/sites/communities/jcr:content,scoringRules@String[],/etc/community/scoring/rules/forums-scoring,badgingRules@String[],/etc/community/badging/rules/forums-badging,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # The following line is adding the ck.plugin.codesnippet entry to the clientlibs for the codesnippet plugin to work on this specific forum instance,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 SlingPost,/content/sites/communities/en/forum/jcr:content/clientlibslist,scg:requiredClientLibs@String[],cq.ckeditor|cq.social.hbs.voting|cq.social.hbs.forum|cq.social.hbs.signup|cq.social.hbs.breadcrumbs|ck.plugin.codesnippet|personalization.core.kernel|personalization.clientcontext.kernel|personalization.stores.kernel|personalization.kernel,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Republishing the site,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
