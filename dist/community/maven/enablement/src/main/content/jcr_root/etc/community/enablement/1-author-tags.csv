@@ -10,3 +10,4 @@ Tag,parentTagID,aem:,jcr:title,Forms,tag,forms,jcr:description,AEM Forms,cmd,cre
 Tag,parentTagID,aem:,jcr:title,Managed Services,tag,managed,jcr:description,AEM Managed Services,cmd,createTag
 Tag,parentTagID,aem:,jcr:title,Platform,tag,platform,jcr:description,AEM Platform,cmd,createTag
 Tag,parentTagID,aem:,jcr:title,Screens,tag,screens,jcr:description,AEM Screens,cmd,createTag
+Activate,/etc/tags/aem,,,,,,,,,
