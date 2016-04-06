@@ -2,5 +2,5 @@
 <workspaceFilter version="1.0">
     <filter root="/apps/community" mode="merge"/>
     <filter root="/content/sites/scoring"/>
-    <filter root="/etc/community/scoring"/>
+    <filter root="/etc/community/scoringdemo"/>
 </workspaceFilter>
