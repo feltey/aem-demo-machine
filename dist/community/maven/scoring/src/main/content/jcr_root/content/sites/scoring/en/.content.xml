@@ -10,5 +10,5 @@
         sling:redirect="{Boolean}true"
         sling:redirectStatus="{Long}302"
         sling:resourceType="foundation/components/redirect"
-        redirectTarget="/bin/SetupCommunities?contentPath=/etc/community/scoring&amp;returnURL=/content/sites/scoring/en.html#top"/>
+        redirectTarget="/bin/SetupCommunities?contentPath=/etc/community/scoringdemo&amp;returnURL=/content/sites/scoring/en.html#top"/>
 </jcr:root>

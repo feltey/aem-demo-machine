@@ -14,7 +14,7 @@ Forum,/content/sites/scoring/en/jcr:content/content/primary/qna.social.json,rteE
 SlingPost,/etc/community/scoring/rules/sub-rules/member-forum-create/jcr:content,topics@String[],com/adobe/cq/social/forum|com/adobe/cq/social/qna,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Activate,/etc/community/scoring/rules/sub-rules/member-forum-create,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Assigning the scoring and badging rules to the site,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-SlingPost,/content/sites/scoring/jcr:content,scoringRules@String[],/etc/community/scoring/rules/forums-scoring,badgingRules@String[],/etc/community/badging/rules/forum-badging,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SlingPost,/content/sites/scoring/jcr:content,scoringRules@String[],/etc/community/scoring/rules/forums-scoring|/etc/community/scoring/rules/adv-forums-scoring,badgingRules@String[],/etc/community/badging/rules/forums-badging|/etc/community/badging/rules/adv-forums-badging,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Assigning a few role based badges,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Badge,/home/users/geometrixx-outdoors/aaron.mcdonald%40mailinator.com/profile.social.json,badgeContentPath,/etc/community/badging/images/moderator/jcr:content/moderator.png,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Republishing the site,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
