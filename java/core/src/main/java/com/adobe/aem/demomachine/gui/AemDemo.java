@@ -31,7 +31,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.awt.event.ActionListener;
@@ -59,6 +58,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.xml.parsers.DocumentBuilder;
@@ -785,6 +785,7 @@ public class AemDemo {
 		frameMain.getContentPane().add(scrollDemoList);	
 		listModelDemoMachines = AemDemoUtils.listDemoMachines(buildFile.getParentFile().getAbsolutePath());
 		listDemoMachines = new JList(listModelDemoMachines);
+		listDemoMachines.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listDemoMachines.setSelectedIndex(AemDemoUtils.getSelectedIndex(listDemoMachines,this.getDefaultProperties(), this.getPersonalProperties(),AemDemoConstants.OPTIONS_BUILD_DEFAULT));
 		scrollDemoList.setViewportView(listDemoMachines);
 
