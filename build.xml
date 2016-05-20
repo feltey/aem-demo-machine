@@ -44,10 +44,70 @@
 		</fileset>
 		<pathelement location="${java}/bin"/>
 	</path>
+	<!-- Target for creating a new demo environment out of the demo.addon properties -->
+	<target name="create">
+		<antcall target="install"/>
+		<if>
+			<equals arg1="${demo.addons.1.packages}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="packages"/>
+			</then>
+		</if>
+		<!-- Configure needs to happen after the packages are uploade (e.g. cloud services) -->
+		<antcall target="configure"/>
+		<if>
+			<equals arg1="${demo.addons.2.sites}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="sites"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.3.assets}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="assets"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.4.communities}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="communities"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.5.apps}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="apps"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.6.forms}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="forms"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.7.commerce}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="commerce"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.8.weretail}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="weretail"/>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${demo.addons.9.livefyre}" arg2="true" casesensitive="false"/>
+			<then>
+				<antcall target="livefyre"/>
+			</then>
+		</if>
+	</target>
 	<!-- Target for installing then configuring a new baseline demo -->
 	<target name="demo">
-		<property name="demo.nosamples" value=""/>
 		<antcall target="install"/>
+		<antcall target="packages"/>
 		<antcall target="configure"/>
 	</target>
 	<!-- Target for installing then configuring a new baseline demo for AEM Communities -->
@@ -79,11 +139,6 @@
 	<target name="demo_apps">
 		<antcall target="demo"/>
 		<antcall target="apps"/>
-	</target>
-	<!-- Target for installing then configuring a new baseline demo for AEM with no samples at all -->
-	<target name="demo_nosamples">
-		<property name="demo.nosamples" value=",nosamplecontent"/>
-		<antcall target="install"/>
 	</target>
 	<!-- Target for installing then configuring EVERYTHING -->
 	<target name="demo_kitchensink">
@@ -559,6 +614,17 @@
 				<property name="dynamicmedia.runmode" value=""/>
 			</else>
 		</if>
+		<!-- Calculate if we need the nosamples runmode -->
+		<if>
+			<equals arg1="${demo.nosamples}" arg2="true" casesensitive="false"/>
+			<then>
+				<property name="nosamples.runmode" value=",nosamples"/>
+				<echo message="Setting no samples runmode"/>
+			</then>
+			<else>
+				<property name="nosamples.runmode" value=""/>
+			</else>
+		</if>
 		<if>
 			<equals arg1="${demomachine.store}" arg2="crx3,crx3mongo" casesensitive="false"/>
 			<!-- AEM6.x MongoMK use case -->
@@ -572,7 +638,7 @@
 					<jvmarg value="-Doak.mongo.db=${demo.mode}"/>
 					<jvmarg value="-Doak.mongo.uri=mongodb://${demo.mongo.host}:${demo.mongo.port}"/>
 					<jvmarg line="${demomachine.jvmargs}"/>
-					<arg value="-r ${demo.mode},${demomachine.store}${demo.nosamples}${dynamicmedia.runmode}"/>
+					<arg value="-r ${demo.mode},${demomachine.store}${nosamples.runmode}${dynamicmedia.runmode}"/>
 					<arg value="-gui"/>
 				</java>
 			</then>
@@ -588,7 +654,7 @@
 							<jvmarg value="-XX:MaxPermSize=256m"/>
 							<jvmarg value="${jvmdebug}"/>
 							<jvmarg line="${demomachine.jvmargs}"/>
-							<arg value="-r ${demo.mode},${demomachine.store}${demo.nosamples}${dynamicmedia.runmode}"/>
+							<arg value="-r ${demo.mode},${demomachine.store}${nosamples.runmode}${dynamicmedia.runmode}"/>
 							<arg value="-gui"/>
 						</java>
 					</then>
@@ -1227,7 +1293,6 @@
 		<if>
 			<equals arg1="${AdobeTarget.install}" arg2="true" casesensitive="false"/>
 			<then>
-				<!-- This is for WebSphere Commerce only -->
 				<exec executable="curl">
 					<arg line="--output '${logs}/${demomachine.authorport}_targetforms.html'"/>
 					<arg line="-u admin:${demo.admin.password}"/>
@@ -1255,6 +1320,67 @@
 					<param name="port" value="${demomachine.authorport}"/>
 					<param name="path" value="/content/geometrixx-finance/global/en/jcr:content"/>
 				</antcall>
+			</then>
+		</if>
+		<!-- Changing the Sling main servlet to handle more than 1000 nested requests -->
+		<exec executable="curl">
+			<arg line="--output '${logs}/${demomachine.authorport}_mainsling.html'"/>
+			<arg line="-u admin:${demo.admin.password}"/>
+			<arg line="-X POST"/>
+			<arg line="--globoff"/>
+			<arg line="-d apply=true"/>
+			<arg line="-d action=ajaxConfigManager"/>
+			<arg line="-d $location="/>
+			<arg line="-d sling.max.calls=2000"/>
+			<arg line="-d propertylist=sling.max.calls"/>
+			<arg line="http://${demo.host}:${demomachine.authorport}/system/console/configMgr/org.apache.sling.engine.impl.SlingMainServlet"/>
+		</exec>
+		<waitfor maxwait="300" maxwaitunit="second" checkevery="5" checkeveryunit="second">
+			<http url="http://${demo.host}:${demomachine.authorport}/libs/granite/core/content/login.html" errorsbeginat="400"/>
+		</waitfor>
+	</target>
+	<!-- Target for installing the Packages demo -->
+	<target name="packages" depends="version,configuration">
+		<foreach target="package_author" param="package">
+			<path id="standard.packages">
+				<fileset dir="${packages}" casesensitive="yes">
+					<include name="all/all/**/*.zip"/>
+					<include name="all/author/**/*.zip"/>
+					<include name="${demo.packages}/all/**/*.zip"/>
+					<include name="${demo.packages}/author/**/*.zip"/>
+				</fileset>
+			</path>
+		</foreach>
+		<if>
+			<socket server="${demo.host}" port="${demomachine.publishport}"/>
+			<then>
+				<foreach target="package_publish" param="package">
+					<path id="publish.packages">
+						<fileset dir="${packages}" casesensitive="yes">
+							<include name="all/all/**/*.zip"/>
+							<include name="all/publish/**/*.zip"/>
+							<include name="${demo.packages}/all/**/*.zip"/>
+							<include name="${demo.packages}/publish/**/*.zip"/>
+						</fileset>
+					</path>
+				</foreach>
+				<sleep seconds="30"/>
+			</then>
+		</if>
+		<if>
+			<socket server="${demo.host}" port="${demomachine.farmport}"/>
+			<then>
+				<foreach target="package_farm" param="package">
+					<path id="farm.packages">
+						<fileset dir="${packages}" casesensitive="yes">
+							<include name="all/all/**/*.zip"/>
+							<include name="all/farm/**/*.zip"/>
+							<include name="${demo.packages}/all/**/*.zip"/>
+							<include name="${demo.packages}/farm/**/*.zip"/>
+						</fileset>
+					</path>
+				</foreach>
+				<sleep seconds="30"/>
 			</then>
 		</if>
 	</target>
@@ -1472,6 +1598,20 @@
 		<delete file="${dist}/downloads/google.txt"/>
 		<delete file="${dist}/downloads/google.html"/>
 	</target>
+	<target name="download_weretail">
+		<echo message="Downloading Latest AEM We.Retail packages from GitHub"/>
+		<delete dir="${dist}/we-retail"/>
+		<mkdir dir="${dist}/downloads"/>
+		<mkdir dir="${dist}/we-retail"/>
+		<exec executable="curl">
+			<arg line="-L -s -k -o '${dist}/downloads/we.retail.all-${demo.download.weretail.all}.zip' https://github.com/Adobe-Marketing-Cloud/aem-sample-we-retail/releases/download/${demo.download.weretail.all}/we.retail.all-${demo.download.weretail.all}.zip"/>
+		</exec>
+		<move todir="${dist}/we-retail">
+			<fileset dir="${dist}/downloads">
+				<include name="**/we.retail.*.zip"/>
+			</fileset>
+		</move>
+	</target>
 	<!-- Target for downloading all packages for a given area -->
 	<target name="download_packageshare">
 		<echo message="Downloading latest AEM ${packageshare.capability} packages from PackageShare"/>
@@ -1513,6 +1653,7 @@
 			<else>
 				<echo message="Connecting to Adobe Package Share with ID: ${AdobeID.user}"/>
 				<mkdir dir="${logs}"/>
+				<delete file="${logs}/download_packageshare.html"/>
 				<exec executable="curl">
 					<arg line="--output '${logs}/download_packageshare.html'"/>
 					<arg line="--cookie-jar '${logs}/packageshare.txt'"/>
@@ -1523,6 +1664,16 @@
 					<arg line="--data-urlencode j_password='${AdobeID.password}'"/>
 					<arg line="https://www.adobeaemcloud.com/content/login/j_security_check"/>
 				</exec>
+				<if>
+					<not>
+						<resourceexists>
+							<file file="${logs}/download_packageshare.html"/>
+						</resourceexists>
+					</not>
+					<then>
+						<fail message="There was a problem connecting to PackageShare. Please verify your network connectivity."/>
+					</then>
+				</if>
 				<if>
 					<resourcecontains resource="${logs}/download_packageshare.html" substring="do not match"/>
 					<then>
@@ -1557,6 +1708,10 @@
 					<arg line="-d package=${packagename}"/>
 					<arg line="https://www.adobeaemcloud.com/apps/cloudmgr/content/packages/user.json"/>
 				</exec>
+				<mkdir dir="${dist}/downloads"/>
+				<exec executable="curl">
+					<arg line="--cookie '${logs}/packageshare.txt' -L -s -k -o '${dist}/downloads/${packageShareFileName}.zip' https://www.adobeaemcloud.com${filepath}/jcr:content/package/file.res/${packageShareFileName}.zip"/>
+				</exec>
 				<if>
 					<and>
 						<isset property="${packageshare.filename}"/>
@@ -1566,14 +1721,10 @@
 					</and>
 					<then>
 						<propertycopy property="filename" from="${packageshare.filename}"/>
-						<exec executable="curl">
-							<arg line="--cookie '${logs}/packageshare.txt' -L -s -k -o '${packageshare.target}/${fileversion}/${filename}' https://www.adobeaemcloud.com${filepath}/jcr:content/package/file.res/${packageShareFileName}.zip"/>
-						</exec>
+						<move file="${dist}/downloads/${packageShareFileName}.zip" tofile="${packageshare.target}/${fileversion}/${filename}" overwrite="true"/>
 					</then>
 					<else>
-						<exec executable="curl">
-							<arg line="--cookie '${logs}/packageshare.txt' -L -s -k -o '${packageshare.target}/${fileversion}/${packageShareFileName}.zip' https://www.adobeaemcloud.com${filepath}/jcr:content/package/file.res/${packageShareFileName}.zip"/>
-						</exec>
+						<move file="${dist}/downloads/${packageShareFileName}.zip" tofile="${packageshare.target}/${fileversion}/${packageShareFileName}.zip" overwrite="true"/>
 					</else>
 				</if>
 			</else>
@@ -1780,6 +1931,10 @@
 			<param name="packageshare.capability" value="communities"/>
 			<param name="packageshare.target" value="${dist}/community/featurepacks"/>
 		</antcall>
+		<antcall target="download_packageshare">
+			<param name="packageshare.capability" value="scorm"/>
+			<param name="packageshare.target" value="${dist}/community/scorm"/>
+		</antcall>
 	</target>
 	<!-- Target for downloading the Hotfixes -->
 	<target name="download_hotfixes_packages">
@@ -1810,6 +1965,16 @@
 		<echo message="Downloading cq-socialcommunities-pkg-1.9.${latest19}.zip"/>
 		<exec executable="curl">
 			<arg line="-s -o '${dist}/downloads/communities-aem62-release.zip' http://sjnexus.corp.adobe.com/nexus/content/repositories/releases/com/adobe/cq/social/cq-socialcommunities-pkg/1.9.${latest19}/cq-socialcommunities-pkg-1.9.${latest19}.zip"/>
+		</exec>
+		<propertyregex property="latest110" input="${metadata.versioning.versions.version}" regexp="(.*)(1\.10\.)([0-9]*)(\,1\.^9\.[0-9]*)*" select="\3"/>
+		<echo message="Downloading cq-socialcommunities-pkg-1.10.${latest110}.zip"/>
+		<exec executable="curl">
+			<arg line="-s -o '${dist}/downloads/communities-aem62-latest.zip' http://sjnexus.corp.adobe.com/nexus/content/repositories/releases/com/adobe/cq/social/cq-socialcommunities-pkg/1.10.${latest110}/cq-socialcommunities-pkg-1.10.${latest110}.zip"/>
+		</exec>
+		<propertyregex property="latest111" input="${metadata.versioning.versions.version}" regexp="(.*)(1\.11\.)([0-9]*)(\,1\.^9\.[0-9]*)*" select="\3"/>
+		<echo message="Downloading cq-socialcommunities-pkg-1.11.${latest111}.zip"/>
+		<exec executable="curl">
+			<arg line="-s -o '${dist}/downloads/communities-aem63-release.zip' http://sjnexus.corp.adobe.com/nexus/content/repositories/releases/com/adobe/cq/social/cq-socialcommunities-pkg/1.11.${latest111}/cq-socialcommunities-pkg-1.11.${latest111}.zip"/>
 		</exec>
 		<delete>
 			<fileset dir="${dist}/downloads" includes="*.xml"/>
@@ -1983,16 +2148,13 @@
 			<and>
 				<socket server="${demo.host}" port="${port}"/>
 				<resourceexists>
-					<file file="${dist}/livefyre/all/Livefyre.zip"/>
-				</resourceexists>
-				<resourceexists>
 					<file file="${dist}/community/livefyre/cq-demo-livefyre-1.0.zip"/>
 				</resourceexists>
 			</and>
 			<then>
 				<echo message="Installing the livefyre FP on running instances"/>
 				<antcall target="package">
-					<param name="package" value="${dist}/livefyre/all/Livefyre.zip"/>
+					<param name="package" value="${dist}/livefyre/${demo.packages}/Livefyre.zip"/>
 				</antcall>
 				<antcall target="package">
 					<param name="package" value="${dist}/community/livefyre/cq-demo-livefyre-1.0.zip"/>
@@ -2184,16 +2346,6 @@
 			</then>
 		</if>
 		<antcall target="configure_replication"/>
-		<foreach target="package_author" param="package">
-			<path id="author.packages">
-				<fileset dir="${packages}" casesensitive="yes">
-					<include name="all/all/**/*.zip"/>
-					<include name="all/author/**/*.zip"/>
-					<include name="${demo.packages}/all/**/*.zip"/>
-					<include name="${demo.packages}/author/**/*.zip"/>
-				</fileset>
-			</path>
-		</foreach>
 		<antcall target="configure_post">
 			<param name="port" value="${demomachine.authorport}"/>
 		</antcall>
@@ -2221,17 +2373,6 @@
 				<waitfor maxwait="300" maxwaitunit="second" checkevery="5" checkeveryunit="second">
 					<http url="http://${demo.host}:${demomachine.publishport}/libs/granite/core/content/login.html" errorsbeginat="400"/>
 				</waitfor>
-				<foreach target="package_publish" param="package">
-					<path id="publish.packages">
-						<fileset dir="${packages}" casesensitive="yes">
-							<include name="all/all/**/*.zip"/>
-							<include name="all/publish/**/*.zip"/>
-							<include name="${demo.packages}/all/**/*.zip"/>
-							<include name="${demo.packages}/publish/**/*.zip"/>
-						</fileset>
-					</path>
-				</foreach>
-				<sleep seconds="30"/>
 				<antcall target="configure_post">
 					<param name="port" value="${demomachine.publishport}"/>
 				</antcall>
@@ -2254,33 +2395,9 @@
 				</antcall>
 				<!-- Unfortunately there's no good way to check when the bundle and its dependencies are up again, hence waiting 30 seconds -->
 				<sleep seconds="30"/>
-				<foreach target="package_farm" param="package">
-					<path id="farm.packages">
-						<fileset dir="${packages}" casesensitive="yes">
-							<include name="all/all/**/*.zip"/>
-							<include name="all/farm/**/*.zip"/>
-							<include name="${demo.packages}/all/**/*.zip"/>
-							<include name="${demo.packages}/farm/**/*.zip"/>
-						</fileset>
-					</path>
-				</foreach>
-				<sleep seconds="30"/>
 				<antcall target="configure_post">
 					<param name="port" value="${demomachine.farmport}"/>
 				</antcall>
-			</then>
-		</if>
-		<antcall target="github"/>
-		<if>
-			<equals arg1="${Livefyre.install}" arg2="true" casesensitive="false"/>
-			<then>
-				<antcall target="livefyre"/>
-			</then>
-		</if>
-		<if>
-			<equals arg1="${demo.weretail.install}" arg2="true" casesensitive="false"/>
-			<then>
-				<antcall target="weretail"/>
 			</then>
 		</if>
 	</target>
@@ -2605,6 +2722,7 @@
 		<if>
 			<equals arg1="${AdobeSocial.install}" arg2="true" casesensitive="false"/>
 			<then>
+				<echo message="Configuring ASRP cloud service"/>
 				<exec executable="curl">
 					<arg line="--output '${logs}/${port}_keys.html'"/>
 					<arg line="-u admin:${demo.admin.password}"/>
@@ -2627,6 +2745,7 @@
 		<if>
 			<equals arg1="${AdobeScene7.install}" arg2="true" casesensitive="false"/>
 			<then>
+				<echo message="Configuring Dynamic Media cloud service"/>
 				<exec executable="curl">
 					<arg line="--output '${logs}/${port}_scene7.html'"/>
 					<arg line="-u admin:${demo.admin.password}"/>
@@ -2659,6 +2778,7 @@
 		<if>
 			<equals arg1="${AdobeAnalytics.install}" arg2="true" casesensitive="false"/>
 			<then>
+				<echo message="Configuring Analytics cloud service"/>
 				<exec executable="curl">
 					<arg line="--output '${logs}/${port}_analytics.html'"/>
 					<arg line="-u admin:${demo.admin.password}"/>
@@ -2961,7 +3081,7 @@
 		<if>
 			<equals arg1="${demo.phonegap}" arg2="true" casesensitive="false"/>
 			<then>
-				<echo message="Setting Apache Sling Referrer filter"/>
+				<echo message="Configuring Apache Sling Referrer filter"/>
 				<exec executable="curl">
 					<arg line="--output '${logs}/${port}_phonegap.html'"/>
 					<arg line="-u admin:${demo.admin.password}"/>
@@ -3259,7 +3379,11 @@
 			<fileset dir="${demo.github.weretail.path}">
 				<include name="ui.content/target/*.zip"/>
 				<include name="ui.apps/target/*.zip"/>
-				<include name="../aem-sample-we-retail-commons/ui.content/target/*.zip"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist}/we-retail" overwrite="true" flatten="true">
+			<fileset dir="${demo.github.weretail.path}/../aem-sample-we-retail-commons">
+				<include name="ui.content/target/*.zip"/>
 			</fileset>
 		</copy>
 	</target>
@@ -3379,9 +3503,12 @@
 	<target name="community_loader_content" depends="community_loader_flag">
 		<!-- We only process the Samples files if ASRP or MSRP is in use (as no content will be there by default) -->
 		<if>
-			<not>
-				<equals arg1="${demomachine.srp}" arg2="JSRP" casesensitive="false"/>
-			</not>
+			<and>
+				<not>
+					<equals arg1="${demomachine.srp}" arg2="JSRP" casesensitive="false"/>
+				</not>
+				<equals arg1="${demo.nosamples}" arg2="false" casesensitive="false"/>
+			</and>
 			<then>
 				<echo message="Updating the Geometrixx Sites with Community content for ${demomachine.srp}"/>
 				<foreach target="community_loader" param="demo.loader.currentfile">
@@ -3396,8 +3523,8 @@
 		<antcall target="stepbystep"/>
 	</target>
 	<!-- Target for configuring the We.Retail Community subsite -->
-	<target name="weretail" if="aem62orlater" depends="version">
-		<echo message="Loading We.Retail Demo Packages"/>
+	<target name="weretail" if="aem62orlater" depends="version,configuration">
+		<echo message="Loading We.Retail Demo Packages on Author"/>
 		<foreach target="package_author" param="package">
 			<path id="weretail.packages">
 				<fileset dir="${dist}" casesensitive="yes">
@@ -3408,6 +3535,7 @@
 		<if>
 			<socket server="${demo.host}" port="${demomachine.publishport}"/>
 			<then>
+				<echo message="Loading We.Retail Demo Packages on Publish"/>
 				<foreach target="package_publish" param="package">
 					<path id="weretail.packages">
 						<fileset dir="${dist}" casesensitive="yes">
@@ -3420,6 +3548,7 @@
 		<if>
 			<socket server="${demo.host}" port="${demomachine.farmport}"/>
 			<then>
+				<echo message="Loading We.Retail Demo Packages on Farm"/>
 				<foreach target="package_farm" param="package">
 					<path id="weretail.packages">
 						<fileset dir="${dist}" casesensitive="yes">
@@ -3429,9 +3558,46 @@
 				</foreach>
 			</then>
 		</if>
+		<!-- Associating Cloud Service on author and publishing... -->
+		<if>
+			<equals arg1="${demo.external}" arg2="false" casesensitive="false"/>
+			<then>
+				<antcall target="cloudservices">
+					<param name="port" value="${demomachine.authorport}"/>
+					<param name="path" value="/content/we-retail/jcr:content"/>
+				</antcall>
+				<if>
+					<socket server="${demo.host}" port="${demomachine.publishport}"/>
+					<then>
+						<antcall target="cloudservices">
+							<param name="port" value="${demomachine.publishport}"/>
+							<param name="path" value="/content/we-retail/jcr:content"/>
+						</antcall>
+					</then>
+				</if>
+				<if>
+					<socket server="${demo.host}" port="${demomachine.farmport}"/>
+					<then>
+						<antcall target="cloudservices">
+							<param name="port" value="${demomachine.publishport}"/>
+							<param name="path" value="/content/we-retail/jcr:content"/>
+						</antcall>
+					</then>
+				</if>
+			</then>
+		</if>
+		<!-- Then we create the We.Retail demo environment -->
+		<if>
+			<and>
+				<equals arg1="${demo.communities.samples.weretail}" arg2="true" casesensitive="false"/>
+			</and>
+			<then>
+				<antcall target="community_loader_weretail"/>
+			</then>
+		</if>
 	</target>
 	<target name="community_loader_weretail" if="aem62orlater" depends="version,community_loader_flag">
-		<echo message="Loading AEM Communities We-Retail Demo Site"/>
+		<echo message="Creating AEM Communities We-Retail Demo Site"/>
 		<if>
 			<socket server="${demo.host}" port="${demomachine.publishport}"/>
 			<then>
@@ -3449,25 +3615,6 @@
 			<arg line="-v -u admin:${demo.admin.password}"/>
 			<arg line="http://${demo.host}:${demomachine.authorport}/bin/CreateCommunities?password=${demo.admin.password}&amp;port_author=${demomachine.authorport}${demo.loader.publish}&amp;hostname_author=${demo.host}&amp;contentPath=/etc/community/we-retail&amp;setup-1=on&amp;setup-2=on&amp;setup-3=on&amp;setup-4=on&amp;setup-5=on&amp;setup-6=on${demo.loader.analytics}"/>
 		</exec>
-	</target>
-	<target name="community_loader_weretail_cloudservices" if="aem62orlater" depends="version">
-		<if>
-			<equals arg1="${demo.external}" arg2="false" casesensitive="false"/>
-			<then>
-				<antcall target="cloudservices">
-					<param name="port" value="${demomachine.authorport}"/>
-					<param name="path" value="/content/we-retail/community/en/jcr:content"/>
-				</antcall>
-				<if>
-					<socket server="${demo.host}" port="${demomachine.publishport}"/>
-					<then>
-						<antcall target="community_publish">
-							<param name="path" value="/content/we-retail/community/en"/>
-						</antcall>
-					</then>
-				</if>
-			</then>
-		</if>
 	</target>
 	<!-- Target for loading the reference demo site for AEM Communities -->
 	<target name="community_loader_reference" depends="community_loader_flag">
@@ -3622,7 +3769,6 @@
 					<and>
 						<or>
 							<equals arg1="${demo.communities.featurepack}" arg2="latest" casesensitive="false"/>
-							<equals arg1="${cq.version}" arg2="6.2" casesensitive="false"/>
 							<equals arg1="${cq.version}" arg2="6.3" casesensitive="false"/>
 						</or>
 						<resourceexists>
@@ -3636,17 +3782,12 @@
 					</then>
 					<else>
 						<if>
-							<and>
-								<not>
-									<equals arg1="${demo.communities.featurepack}" arg2="none" casesensitive="false"/>
-								</not>
-								<resourceexists>
-									<file file="${dist}/community/featurepacks/${demo.packages}/${demo.communities.featurepack}-scorm.zip"/>
-								</resourceexists>
-							</and>
+							<resourceexists>
+								<file file="${dist}/community/scorm/all/cq-social-scorm-pkg.zip"/>
+							</resourceexists>
 							<then>
 								<antcall target="package">
-									<param name="package" value="${dist}/community/featurepacks/${demo.packages}/${demo.communities.featurepack}-scorm.zip"/>
+									<param name="package" value="${dist}/community/scorm/all/cq-social-scorm-pkg.zip"/>
 								</antcall>
 							</then>
 							<else>
@@ -3912,17 +4053,6 @@
 			</then>
 		</if>
 		<antcall target="stepbystep"/>
-		<!-- Then we create the We.Retail demo environment -->
-		<if>
-			<and>
-				<equals arg1="${demo.communities.samples.weretail}" arg2="true" casesensitive="false"/>
-				<equals arg1="${demo.weretail.install}" arg2="true" casesensitive="false"/>
-			</and>
-			<then>
-				<antcall target="community_loader_weretail"/>
-				<antcall target="community_loader_weretail_cloudservices"/>
-			</then>
-		</if>
 		<antcall target="community_analytics"/>
 		<antcall target="community_warmup"/>
 	</target>
@@ -4193,6 +4323,10 @@
 					<arg line="-d propertylist=enable,agent.configuration,disabled.cipher.suites,enabled.cipher.suites"/>
 					<arg line="http://${demo.host}:${demomachine.authorport}/system/console/configMgr/com.adobe.cq.social.user.impl.transport.HttpToPublisher"/>
 				</exec>
+				<sleep seconds="5"/>
+				<waitfor maxwait="300" maxwaitunit="second" checkevery="5" checkeveryunit="second">
+					<http url="http://${demo.host}:${demomachine.authorport}/libs/granite/core/content/login.html" errorsbeginat="400"/>
+				</waitfor>
 			</then>
 		</if>
 	</target>
@@ -4274,6 +4408,20 @@
 					<arg line="-d ./asipath=/content/usergenerated/asi/cloud"/>
 					<arg line="http://${demo.host}:${port}/etc/socialconfig/srpc/defaultconfiguration"/>
 				</exec>
+				<if>
+					<socket server="${demo.host}" port="${demomachine.authorport}"/>
+					<then>
+						<echo message="Removing all ASRP content..."/>
+						<exec executable="curl">
+							<arg line="--output '${logs}/${port}_asrp_cleanup.html'"/>
+							<arg line="--globoff"/>
+							<arg line="-u admin:${demo.admin.password}"/>
+							<arg line="-X POST"/>
+							<arg line="-d path=/content/usergenerated/asi/cloud"/>
+							<arg line="http://${demo.host}:${port}/services/social/srp/cleanup"/>
+						</exec>
+					</then>
+				</if>
 			</then>
 		</if>
 	</target>
@@ -4582,7 +4730,7 @@
 		<if>
 			<and>
 				<equals arg1="${count.hotfixes}" arg2="0" casesensitive="false"/>
-				<equals arg1="${demo.scenario}" arg2="demo_communities" casesensitive="false"/>
+				<equals arg1="${demo.addons.4.communities}" arg2="true" casesensitive="false"/>
 				<equals arg1="${demo.packages}" arg2="aem61" casesensitive="false"/>
 			</and>
 			<then>
@@ -4592,7 +4740,7 @@
 		<if>
 			<and>
 				<equals arg1="${demomachine.type}" arg2="author" casesensitive="false"/>
-				<equals arg1="${demo.scenario}" arg2="demo_communities" casesensitive="false"/>
+				<equals arg1="${demo.addons.4.communities}" arg2="true" casesensitive="false"/>
 			</and>
 			<then>
 				<echo message="Demonstrating AEM Communities should be done with a running Publish instance. Proceeding with Author only for this demo instance"/>
@@ -4684,7 +4832,10 @@
 		<if>
 			<and>
 				<equals arg1="${ant.java.version}" arg2="1.8" casesensitive="false"/>
-				<equals arg1="${demo.packages}" arg2="cq56" casesensitive="false"/>
+				<or>
+					<equals arg1="${demo.packages}" arg2="aem60" casesensitive="false"/>
+					<equals arg1="${demo.packages}" arg2="cq56" casesensitive="false"/>
+				</or>
 			</and>
 			<then>
 				<fail message="CQ 5.6.x cannot run with Java8 - please install a Java6 JDK"/>
